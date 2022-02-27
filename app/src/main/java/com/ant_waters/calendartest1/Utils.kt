@@ -1,4 +1,4 @@
-package com.ant_waters.covidstatistics.Utils
+package com.ant_waters.calendartest1.Utils
 
 import android.content.Context
 import android.graphics.Color
@@ -7,7 +7,6 @@ import android.util.Log
 import android.view.Gravity
 import android.widget.TextView
 import android.widget.Toast
-import androidx.annotation.ColorInt
 import androidx.appcompat.app.AlertDialog
 import com.ant_waters.calendartest1.MainViewModel
 

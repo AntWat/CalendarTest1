@@ -14,7 +14,6 @@ import java.util.*
 class CalendarManager {
 
     companion object {
-        //val EVENT_OWNER_TAG = "admin@calendartest1.com"      // Tag that will be used to tag all calendar events added and managed by this App
         val EVENT_DESCRIPTION_TAG = "Added by: CalendarTest1"      // Tag that will be used to tag all calendar events added and managed by this App
 
         public fun GetCalendars(contentResolver: ContentResolver) : List<String>? {
@@ -76,54 +75,26 @@ class CalendarManager {
 
         // --------------------------------------------
 
-        public fun WriteEvents(contentResolver: ContentResolver, calID: Long,
-                               eventIds: MutableList<Long>): String /* errMsg */ {
-            var errMsg = ""
-            var errMsg2 = ""
-            try {
-                Log.i(MainViewModel.LOG_TAG, "Starting: WriteEvents")
-
-                if  (!PermissionsManager.CheckPermission(Manifest.permission.WRITE_CALENDAR)) {
-                    throw Exception("WRITE_CALENDAR permission should have been obtained before calling WriteEvents")
-                }
-
-                errMsg2 += WriteEvent(contentResolver, calID, eventIds,
-                    "My2 Saxophone practice", "Enjoy!", "Home",
-                    "2022.02.28 13:00", 60)
-                if (errMsg2.length>0) { errMsg += "\n" + errMsg2 }
-
-                errMsg2 += WriteEvent(contentResolver, calID, eventIds,
-                    "My2 Choir", "Sing well!", "Bowdon Rugby",
-                    "2022.02.28 17:00", 120)
-                if (errMsg2.length>0) { errMsg += "\n" + errMsg2 }
-
-                return errMsg
-
-            } catch (ex: Exception) {
-                Log.e(MainViewModel.LOG_TAG, "GetCalendars Error: ${ex.message}")
-                throw ex
-            }
-        }
-
-        fun WriteEvent(contentResolver: ContentResolver, calID: Long, eventIds: MutableList<Long>,
+        public fun WriteEvent(contentResolver: ContentResolver, calID: Long, eventIds: MutableList<Long>,
                            title: String, description: String, location: String,
                            startdateTime: String, durationInMinutes: Int): String /* errMsg */ {
             try {
+                Log.i(MainViewModel.LOG_TAG, "Starting: WriteEvent")
+
+                if  (!PermissionsManager.CheckPermission(Manifest.permission.WRITE_CALENDAR)) {
+                    throw Exception("WRITE_CALENDAR permission should have been obtained before calling WriteEvent")
+                }
+
                 //val startMillis: Long = getUtcEpochMillisecs("2022.02.27 13:00")
                 val startMillis: Long = getUtcEpochMillisecs(startdateTime)
-                //val endMillis: Long = getUtcEpochMillisecs("2022.02.27 14:30")
                 val duration = "PT${durationInMinutes}M"
 
                 val values = ContentValues().apply {
-                    //put(CalendarContract.Events.ORGANIZER, EVENT_OWNER_TAG)
-                        // This is very important, as it is the only way I have found to label the new events,
-                        // so we can modify or delete them later
 
                     put(CalendarContract.Events.DTSTART, startMillis)
-                    //put(CalendarContract.Events.DTEND, endMillis)
                     put(CalendarContract.Events.DURATION, duration)
                     put(CalendarContract.Events.TITLE, title)
-                    put(CalendarContract.Events.DESCRIPTION, description + "\n\n$EVENT_DESCRIPTION_TAG\n")
+
                     put(CalendarContract.Events.CALENDAR_ID, calID)
                     put(CalendarContract.Events.EVENT_TIMEZONE, "Europe/London")
 
@@ -132,6 +103,21 @@ class CalendarManager {
                     put(CalendarContract.Events.HAS_ALARM, 0)
                     //put(CalendarContract.Events.HAS_EXTENDED_PROPERTIES, true)
                     put(CalendarContract.Events.IS_ORGANIZER, 0)
+
+                    put(CalendarContract.Events.DESCRIPTION, description
+                            + "\n\n$EVENT_DESCRIPTION_TAG\n")
+//                         Note: This is very important, as it is the only way I have found to label the new events,
+//                         so we can modify or delete them later.
+//
+//                         Other methods I tried:
+//                              (*) val EVENT_OWNER_TAG = "admin@calendartest1.com"
+//                                  put(CalendarContract.Events.ORGANIZER, EVENT_OWNER_TAG)
+//                                  -> Failed because the ORGANIZER of an event would get reset by the calendar to its owner.
+//                                  I guess this is because it somehow knows that "admin@calendartest1.com" is not a real email address?
+//                              (*) Using extendedproperties
+//                                  -> Failed with the Exception:
+//                                     java.lang.IllegalArgumentException: Only sync adapters may write using content://com.android.calendar/extendedproperties
+
                 }
                 val eventsUri: Uri = CalendarContract.Events.CONTENT_URI
                 val newUri: Uri? = contentResolver.insert(eventsUri, values)
@@ -142,10 +128,6 @@ class CalendarManager {
                 if (eventID != null)
                 {
                     eventIds.add(eventID)
-
-//                    var errMsg2: String = AddCustomProperties(contentResolver, eventID,
-//                                    List(1){ Pair(EVENT_PROPERTY_ADDED_BY, CALENDAR_TAG) })
-//                    if (errMsg2.length>0) { return errMsg2 }
                 }
 
                 return  ""
@@ -219,7 +201,6 @@ class CalendarManager {
                     CalendarContract.Instances.TITLE, // 2
                     CalendarContract.Instances.ORGANIZER // 3
                 )
-                //CalendarContract.Instances.EVENT_ID, // 0
 
                 // The indices for the projection array above.
                 val PROJECTION_ID_INDEX: Int = 0
@@ -228,9 +209,7 @@ class CalendarManager {
                 val PROJECTION_TITLE_ORGANIZER: Int = 3
 
                 // ----------------- Run query
-                //val uri: Uri = CalendarContract.Instances.CONTENT_URI
                 val selection: String = "(${CalendarContract.Instances.DESCRIPTION} LIKE '%${EVENT_DESCRIPTION_TAG}%')"
-                //val selectionArgs: Array<String> = arrayOf("")
 
                 // Construct the query with the desired date range.
                 val builder: Uri.Builder = CalendarContract.Instances.CONTENT_URI.buildUpon()
@@ -263,6 +242,45 @@ class CalendarManager {
             }
         }
 
+        // --------------------------------------------
+
+        public fun DeleteEvents(contentResolver: ContentResolver, eventIds: List<Long>): String /* errMsg */ {
+            var errMsg = ""
+            var errMsg2 = ""
+            try {
+                Log.i(MainViewModel.LOG_TAG, "Starting: DeleteEvents")
+
+                if  (!PermissionsManager.CheckPermission(Manifest.permission.WRITE_CALENDAR)) {
+                    throw Exception("WRITE_CALENDAR permission should have been obtained before calling WriteEvents")
+                }
+
+                for (eventId in eventIds) {
+                    errMsg2 += DeleteEvent(contentResolver, eventId)
+                    if (errMsg2.length>0) { errMsg += "\n" + errMsg2 }
+                }
+
+                return errMsg
+
+            } catch (ex: Exception) {
+                Log.e(MainViewModel.LOG_TAG, "DeleteEvents Error: ${ex.message}")
+                throw ex
+            }
+        }
+
+        fun DeleteEvent(contentResolver: ContentResolver, eventId: Long): String /* errMsg */ {
+            try {
+                val deleteUri: Uri = ContentUris.withAppendedId(CalendarContract.Events.CONTENT_URI, eventId)
+                val rows: Int = contentResolver.delete(deleteUri, null, null)
+
+                if (rows==0) { return "No rows deleted for event $eventId" }
+
+                return  ""
+            }
+            catch (ex:Exception)
+            {
+                return ex.message.toString()
+            }
+        }
 
 
 

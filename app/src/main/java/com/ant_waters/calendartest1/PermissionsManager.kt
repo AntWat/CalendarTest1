@@ -56,14 +56,23 @@ class PermissionsManager {
                                  componentActivity: ComponentActivity,
                                  requestPermissionLauncher: ActivityResultLauncher<String?>,
                                  onPermissionRequestComplete: OnPermissionRequestComplete ) {
-            if (_permissionsGranted.contains(permission)) { onPermissionRequestComplete.DoAction(true) }
-            if (_permissionsRefused.contains(permission)) { onPermissionRequestComplete.DoAction(false) }
+            if (_permissionsGranted.contains(permission))
+            {
+                onPermissionRequestComplete.DoAction(true)
+                return
+            }
+            if (_permissionsRefused.contains(permission))
+            {
+                onPermissionRequestComplete.DoAction(false)
+                return
+            }
 
             when {
                 ContextCompat.checkSelfPermission(context,permission)
 
                  == PackageManager.PERMISSION_GRANTED -> {
                     onPermissionRequestComplete.DoAction(true)
+                    return
                  }
 
 //                shouldShowRequestPermissionRationale(...) -> {
