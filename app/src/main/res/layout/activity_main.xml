@@ -17,6 +17,14 @@
         android:layout_gravity="center_horizontal"
         >
     </Button>
+    <Button
+        android:id="@+id/btn__AddEvents"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Add Events"
+        android:layout_gravity="center_horizontal"
+        >
+    </Button>
 </LinearLayout>
 
 <!--<androidx.constraintlayout.widget.ConstraintLayout-->

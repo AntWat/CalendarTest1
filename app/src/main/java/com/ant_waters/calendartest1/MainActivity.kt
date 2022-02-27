@@ -39,6 +39,7 @@ class MainActivity : AppCompatActivity() {
             getWidgets()
 
             btn__GetCalendars.setOnClickListener { btnGetCalendars_Click() }
+            btn__AddEvents.setOnClickListener { btnAddEvents_Click() }
 
             // --------------  Register the permissions callback
             // which handles the user's response to the system permissions dialog.
@@ -57,14 +58,16 @@ class MainActivity : AppCompatActivity() {
     // --------------------------------------------
 
     lateinit var btn__GetCalendars: Button
+    lateinit var btn__AddEvents: Button
+
 
     fun getWidgets()
     {
         btn__GetCalendars = this.findViewById<View>(com.ant_waters.calendartest1.R.id.btn__GetCalendars) as Button
+        btn__AddEvents = this.findViewById<View>(com.ant_waters.calendartest1.R.id.btn__AddEvents) as Button
     }
 
     // --------------------------------------------
-
     fun btnGetCalendars_Click() {
         try {
             Log.i(MainViewModel.LOG_TAG, "btnGetCalendars_Click: Started")
@@ -97,11 +100,6 @@ class MainActivity : AppCompatActivity() {
 
             val calendarInfo = CalendarManager.GetCalendars(contentResolver, this)
 
-//            if (errMsg.length > 0) {
-//                Utils.LogAndShowError(errMsg, this)
-//                return
-//            }
-//
             if (calendarInfo==null || calendarInfo.count()==0) {
                 Utils.ShowToast(this,
                     "No calendars returned",
@@ -111,6 +109,52 @@ class MainActivity : AppCompatActivity() {
                 for (ci in calendarInfo) { msg += "$ci /r/n" }
                 Utils.ShowMessage("Calendars found", msg, this)
             }
+        }
+        catch (ex:Exception)
+        {
+            Utils.LogAndShowError(ex, this)
+        }
+        finally {
+            _onPermissionRequestComplete = OnPermissionRequestComplete.DoNothing
+        }
+    }
+
+    // --------------------------------------------
+    fun btnAddEvents_Click() {
+        try {
+            Log.i(MainViewModel.LOG_TAG, "btnAddEvents_Click: Started")
+
+            // Note that the line below must set the variable used above in the definition of _requestPermissionLauncher.
+            // This variable is also passed to PermissionsManager.RequestPermission to be called if the permission is already known.
+
+            _onPermissionRequestComplete = OnPermissionRequestComplete(Manifest.permission.WRITE_CALENDAR,
+                fun (isGranted:Boolean) { AddEventsContinue(isGranted) })
+
+            PermissionsManager.RequestPermission(Manifest.permission.WRITE_CALENDAR,
+                this, this, _requestPermissionLauncher,
+                _onPermissionRequestComplete
+            )
+
+        }
+        catch (ex:Exception)
+        {
+            _onPermissionRequestComplete = OnPermissionRequestComplete.DoNothing
+            Utils.LogAndShowError(ex, this)
+        }
+    }
+
+    fun AddEventsContinue(isGranted_WRITE_CALENDAR:Boolean) {
+        try {
+            if (!isGranted_WRITE_CALENDAR) {
+                Utils.LogAndShowError("WRITE_CALENDAR was denied", this)
+                return
+            }
+
+            val eventIds = mutableListOf<Long>()
+
+            val errMsg = CalendarManager.WriteEvents(contentResolver, eventIds)
+
+            if (errMsg.length>0) { Utils.LogAndShowError(errMsg, this) }
         }
         catch (ex:Exception)
         {
