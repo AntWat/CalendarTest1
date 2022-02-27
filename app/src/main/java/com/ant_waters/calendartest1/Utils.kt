@@ -40,6 +40,24 @@ class Utils() {
             } catch (ex:Exception) { LogAndShowError(ex, context)}
         }
 
+        fun AskQuestion(title: String, msg: String, context: Context,
+                                onYes: (()->Unit)?, onNo: (()->Unit)?) {
+            try {
+                val builder = AlertDialog.Builder(context)
+                builder.setTitle(title)
+                builder.setMessage(msg)
+
+                builder.setPositiveButton(android.R.string.yes)
+                        { dialog, which-> if (onYes!=null) onYes() }
+                builder.setNegativeButton(android.R.string.no)
+                        { dialog, which->if (onNo!=null) onNo() }
+
+                var dlg = builder.create()
+                dlg.show()
+                Linkify.addLinks((dlg.findViewById(android.R.id.message) as TextView?)!!, Linkify.ALL)
+            } catch (ex:Exception) { LogAndShowError(ex, context)}
+        }
+
         // ---------------------------------------
 
         fun ShowError(errMsg: String, context: Context) {

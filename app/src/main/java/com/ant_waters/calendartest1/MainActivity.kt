@@ -40,6 +40,7 @@ class MainActivity : AppCompatActivity() {
 
             btn__GetCalendars.setOnClickListener { btnGetCalendars_Click() }
             btn__AddEvents.setOnClickListener { btnAddEvents_Click() }
+            btn__GetEvents.setOnClickListener { btnGetEvents_Click() }
 
             // --------------  Register the permissions callback
             // which handles the user's response to the system permissions dialog.
@@ -59,12 +60,13 @@ class MainActivity : AppCompatActivity() {
 
     lateinit var btn__GetCalendars: Button
     lateinit var btn__AddEvents: Button
-
+    lateinit var btn__GetEvents: Button
 
     fun getWidgets()
     {
         btn__GetCalendars = this.findViewById<View>(com.ant_waters.calendartest1.R.id.btn__GetCalendars) as Button
         btn__AddEvents = this.findViewById<View>(com.ant_waters.calendartest1.R.id.btn__AddEvents) as Button
+        btn__GetEvents = this.findViewById<View>(com.ant_waters.calendartest1.R.id.btn__GetEvents) as Button
     }
 
     // --------------------------------------------
@@ -98,7 +100,7 @@ class MainActivity : AppCompatActivity() {
                 return
             }
 
-            val calendarInfo = CalendarManager.GetCalendars(contentResolver, this)
+            val calendarInfo = CalendarManager.GetCalendars(contentResolver)
 
             if (calendarInfo==null || calendarInfo.count()==0) {
                 Utils.ShowToast(this,
@@ -106,7 +108,7 @@ class MainActivity : AppCompatActivity() {
                     Toast.LENGTH_LONG, -1, Color.RED)
             } else {
                 var msg = ""
-                for (ci in calendarInfo) { msg += "$ci /r/n" }
+                for (ci in calendarInfo) { msg += "$ci \n" }
                 Utils.ShowMessage("Calendars found", msg, this)
             }
         }
@@ -120,6 +122,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     // --------------------------------------------
+    val calID: Long = 1     // TODO
+
     fun btnAddEvents_Click() {
         try {
             Log.i(MainViewModel.LOG_TAG, "btnAddEvents_Click: Started")
@@ -150,9 +154,29 @@ class MainActivity : AppCompatActivity() {
                 return
             }
 
-            val eventIds = mutableListOf<Long>()
+            var bContinue: Boolean = false
+            Utils.AskQuestion("Add events to calendar?",
+                "This is an experimental feature that will add events to the calendar, " +
+                        "but could seriously mess it up! " +
+                        "You are strongly advised NOT to run it on a real (non-DEV) phone! " +
+                        "\n\nDo you want to continue?",
+                this,
+                fun () { AddEventsContinue2() }, null
+            )
+        }
+        catch (ex:Exception)
+        {
+            Utils.LogAndShowError(ex, this)
+        }
+        finally {
+            _onPermissionRequestComplete = OnPermissionRequestComplete.DoNothing
+        }
+    }
 
-            val errMsg = CalendarManager.WriteEvents(contentResolver, eventIds)
+    fun AddEventsContinue2() {
+        try {
+            val eventIds = mutableListOf<Long>()
+            val errMsg = CalendarManager.WriteEvents(contentResolver, calID, eventIds)
 
             if (errMsg.length>0) { Utils.LogAndShowError(errMsg, this) }
         }
@@ -165,6 +189,70 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    // --------------------------------------------
+    fun btnGetEvents_Click() {
+        try {
+            Log.i(MainViewModel.LOG_TAG, "btnGetCalendars_Click: Started")
+
+            // Note that the line below must set the variable used above in the definition of _requestPermissionLauncher.
+            // This variable is also passed to PermissionsManager.RequestPermission to be called if the permission is already known.
+
+            _onPermissionRequestComplete = OnPermissionRequestComplete(Manifest.permission.READ_CALENDAR,
+                fun (isGranted:Boolean) { GetEventsContinue(isGranted) })
+
+            PermissionsManager.RequestPermission(Manifest.permission.READ_CALENDAR,
+                this, this, _requestPermissionLauncher,
+                _onPermissionRequestComplete
+            )
+
+        }
+        catch (ex:Exception)
+        {
+            _onPermissionRequestComplete = OnPermissionRequestComplete.DoNothing
+            Utils.LogAndShowError(ex, this)
+        }
+    }
+
+    fun GetEventsContinue(isGranted_READ_CALENDAR:Boolean) {
+        try {
+            if (!isGranted_READ_CALENDAR) {
+                Utils.LogAndShowError("READ_CALENDAR was denied", this)
+                return
+            }
+
+            val eventIds = mutableListOf<Long>()
+            val eventInfo = mutableListOf<String>()
+            val errMsg = CalendarManager.GetEvents(contentResolver,
+                "2021.09.01 09:00", "2022.07.25 17:00",
+                eventIds, eventInfo)
+
+            if (errMsg.length>0) {
+                Utils.LogAndShowError(errMsg, this)
+                return
+            }
+
+            if (eventIds==null || eventIds.count()==0) {
+                Utils.ShowToast(this,
+                    "No events returned",
+                    Toast.LENGTH_LONG, -1, Color.RED)
+            } else {
+                var msg = "${eventInfo.count()} events were found\n"
+                for (ei in eventInfo) { msg += "$ei \n" }
+                Utils.ShowMessage("Events found", msg, this)
+            }
+        }
+        catch (ex:Exception)
+        {
+            Utils.LogAndShowError(ex, this)
+        }
+        finally {
+            _onPermissionRequestComplete = OnPermissionRequestComplete.DoNothing
+        }
+    }
+
     // ---------------------------------------
+
+    //btnGetEvents_Click
+
 
 }
