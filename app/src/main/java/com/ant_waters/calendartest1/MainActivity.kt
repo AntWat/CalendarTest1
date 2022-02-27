@@ -108,7 +108,7 @@ class MainActivity : AppCompatActivity() {
             } else {
                 var msg = ""
                 for (ci in calendarInfo) { msg += "$ci \n" }
-                Utils.ShowMessage("Calendars found", msg, this)
+                Utils.ShowMessage("Calendars found", msg, this, false)
             }
         }
         catch (ex:Exception)
@@ -159,7 +159,7 @@ class MainActivity : AppCompatActivity() {
                         "but could seriously mess it up! " +
                         "You are strongly advised NOT to run it on a real (non-DEV) phone! " +
                         "\n\nDo you want to continue?",
-                this,
+                this, false,
                 fun () { AddEventsContinue2() }, null
             )
         }
@@ -178,7 +178,7 @@ class MainActivity : AppCompatActivity() {
             val errMsg = WriteEvents(contentResolver, calID, eventIds)
 
             if (errMsg.length>0) { Utils.LogAndShowError(errMsg, this) }
-            else { Utils.ShowMessage("AddEvents", "AddEvents succeeded", this) }
+            else { Utils.ShowMessage("AddEvents", "AddEvents succeeded", this, false) }
         }
         catch (ex:Exception)
         {
@@ -200,14 +200,14 @@ class MainActivity : AppCompatActivity() {
 
             errMsg2 = CalendarManager.WriteEvent(
                 contentResolver, calID, eventIds,
-                "My2 Saxophone practice", "Enjoy!", "Home",
+                "Saxophone practice", "Enjoy!", "Home",
                 "2022.02.28 13:00", 60
             )
             if (errMsg2.length>0) { errMsg += "\n" + errMsg2 }
 
             errMsg2 = CalendarManager.WriteEvent(
                 contentResolver, calID, eventIds,
-                "My2 Choir", "Sing well!", "Bowdon Rugby",
+                "Choir", "Sing well!", "Bowdon Rugby",
                 "2022.02.28 17:00", 120
             )
             if (errMsg2.length>0) { errMsg += "\n" + errMsg2 }
@@ -268,9 +268,9 @@ class MainActivity : AppCompatActivity() {
                     "No events returned",
                     Toast.LENGTH_LONG, -1, Color.RED)
             } else {
-                var msg = "${eventInfo.count()} events were found\n"
-                for (ei in eventInfo) { msg += "$ei \n" }
-                Utils.ShowMessage("Events found", msg, this)
+                var msg = "${eventInfo.count()} events were found\n\n"
+                for (ei in eventInfo) { msg += "$ei \n\n" }
+                Utils.ShowMessage("Events found", msg, this, false)
             }
         }
         catch (ex:Exception)
@@ -319,7 +319,7 @@ class MainActivity : AppCompatActivity() {
                         "but could seriously mess it up! " +
                         "You are strongly advised NOT to run it on a real (non-DEV) phone! " +
                         "\n\nDo you want to continue?",
-                this,
+                this, false,
                 fun () { DeleteEventsContinue2() }, null
             )
         }
@@ -348,7 +348,7 @@ class MainActivity : AppCompatActivity() {
             errMsg = CalendarManager.DeleteEvents(contentResolver, eventIds)
 
             if (errMsg.length>0) { Utils.LogAndShowError(errMsg, this) }
-            else { Utils.ShowMessage("DeleteEvents", "DeleteEvents succeeded", this) }
+            else { Utils.ShowMessage("DeleteEvents", "DeleteEvents succeeded", this, false) }
         }
         catch (ex:Exception)
         {

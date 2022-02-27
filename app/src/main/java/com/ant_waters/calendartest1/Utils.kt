@@ -24,7 +24,7 @@ class Utils() {
             toast.show();
         }
 
-        fun ShowMessage(title: String, msg: String, context: Context) {
+        fun ShowMessage(title: String, msg: String, context: Context, linkify: Boolean) {
             try {
                 val builder = AlertDialog.Builder(context)
                 builder.setTitle(title)
@@ -35,11 +35,17 @@ class Utils() {
 
                 var dlg = builder.create()
                 dlg.show()
-                Linkify.addLinks((dlg.findViewById(android.R.id.message) as TextView?)!!, Linkify.ALL)
+
+                if (linkify) {
+                    Linkify.addLinks(
+                        (dlg.findViewById(android.R.id.message) as TextView?)!!,
+                        Linkify.ALL
+                    )
+                }
             } catch (ex:Exception) { LogAndShowError(ex, context)}
         }
 
-        fun AskQuestion(title: String, msg: String, context: Context,
+        fun AskQuestion(title: String, msg: String, context: Context, linkify: Boolean,
                                 onYes: (()->Unit)?, onNo: (()->Unit)?) {
             try {
                 val builder = AlertDialog.Builder(context)
@@ -53,7 +59,13 @@ class Utils() {
 
                 var dlg = builder.create()
                 dlg.show()
-                Linkify.addLinks((dlg.findViewById(android.R.id.message) as TextView?)!!, Linkify.ALL)
+
+                if (linkify) {
+                    Linkify.addLinks(
+                        (dlg.findViewById(android.R.id.message) as TextView?)!!,
+                        Linkify.ALL
+                    )
+                }
             } catch (ex:Exception) { LogAndShowError(ex, context)}
         }
 

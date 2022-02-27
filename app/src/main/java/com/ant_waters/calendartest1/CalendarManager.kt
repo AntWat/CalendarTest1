@@ -86,7 +86,7 @@ class CalendarManager {
                 }
 
                 //val startMillis: Long = getUtcEpochMillisecs("2022.02.27 13:00")
-                val startMillis: Long = getUtcEpochMillisecs(startdateTime)
+                val startMillis: Long = dateTimeStringToUtcEpochMillisecs(startdateTime)
                 val duration = "PT${durationInMinutes}M"
 
                 val values = ContentValues().apply {
@@ -138,16 +138,6 @@ class CalendarManager {
             }
         }
 
-        fun getUtcEpochMillisecs(dateTimeString: String): Long {
-            val formatter = SimpleDateFormat("yyyy.MM.dd HH:mm")
-            val date: Date = formatter.parse(dateTimeString)
-
-            // get epoch millis
-            val epochMillis: Long = date.getTime()
-
-            return epochMillis
-        }
-
 //         The method below cannot be used, as it causes the error:
 //         java.lang.IllegalArgumentException: Only sync adapters may write using content://com.android.calendar/extendedproperties
 //
@@ -191,8 +181,8 @@ class CalendarManager {
                 }
 
                 // -----------------
-                val startMillis: Long = getUtcEpochMillisecs(startdateTime)
-                val endMillis: Long = getUtcEpochMillisecs(enddateTime)
+                val startMillis: Long = dateTimeStringToUtcEpochMillisecs(startdateTime)
+                val endMillis: Long = dateTimeStringToUtcEpochMillisecs(enddateTime)
 
                 // ----------------- Projection array.
                 val PROJECTION_ARRAY: Array<String> = arrayOf(
@@ -226,7 +216,9 @@ class CalendarManager {
                 while (cur.moveToNext()) {
                     // Get the field values
                     val eventID: Long = cur.getLong(PROJECTION_ID_INDEX)
-                    val startdateTime: String = cur.getString(PROJECTION_BEGIN_INDEX)
+                    val startMillisecsString: String = cur.getString(PROJECTION_BEGIN_INDEX)
+                    val startdateTime = utcEpochMillisecsToDateTimeString(startMillisecsString.toLong())
+
                     val title: String = cur.getString(PROJECTION_TITLE_INDEX)
                     val organizer: String = cur.getString(PROJECTION_TITLE_ORGANIZER)
 
@@ -282,6 +274,26 @@ class CalendarManager {
             }
         }
 
+        // ----------------------------------
+        val dateTimePattern = "yyyy.MM.dd HH:mm"
+
+        fun dateTimeStringToUtcEpochMillisecs(dateTimeString: String): Long {
+            val formatter = SimpleDateFormat(dateTimePattern)
+            val date: Date = formatter.parse(dateTimeString)
+
+            // get epoch millis
+            val epochMillis: Long = date.getTime()
+
+            return epochMillis
+        }
+
+        fun utcEpochMillisecsToDateTimeString(epochMillis: Long): String {
+            val formatter = SimpleDateFormat(dateTimePattern)
+            val date = Date(epochMillis)
+            val dateTimeString = formatter.format(date)
+
+            return dateTimeString
+        }
 
 
     }
