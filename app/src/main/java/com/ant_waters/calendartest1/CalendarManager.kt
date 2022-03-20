@@ -1,11 +1,14 @@
 package com.ant_waters.calendartest1
 
 import android.Manifest
+import android.accounts.Account
 import android.content.ContentResolver
 import android.content.ContentUris
 import android.content.ContentValues
+import android.content.Context
 import android.database.Cursor
 import android.net.Uri
+import android.os.Bundle
 import android.provider.CalendarContract
 import android.util.Log
 import java.text.SimpleDateFormat
@@ -45,7 +48,7 @@ class CalendarManager {
                         "${CalendarContract.Calendars.ACCOUNT_TYPE} = ?) AND (" +
                         "${CalendarContract.Calendars.OWNER_ACCOUNT} = ?))"
                 val selectionArgs: Array<String> =
-                    arrayOf("watdev64@gmail.com", "com.google", "watdev64@gmail.com")
+                    arrayOf("watdev64@gmail.com", "com.google", "watdev64@gmail.com")       // TODO
                 val cur: Cursor? =
                     contentResolver.query(uri, PROJECTION_ARRAY, selection, selectionArgs, null)
 //                val cur: Cursor? =
@@ -137,6 +140,15 @@ class CalendarManager {
                 return ex.message.toString()
             }
         }
+
+        public fun forceSync(context: Context) {
+            val extras = Bundle()
+            extras.putBoolean(ContentResolver.SYNC_EXTRAS_MANUAL, true)
+            extras.putBoolean(ContentResolver.SYNC_EXTRAS_EXPEDITED, true);
+            val account = Account("watdev64@gmail.com", "com.google")   // TODO
+            ContentResolver.requestSync(account, CalendarContract.AUTHORITY, extras)
+        }
+
 
 //         The method below cannot be used, as it causes the error:
 //         java.lang.IllegalArgumentException: Only sync adapters may write using content://com.android.calendar/extendedproperties

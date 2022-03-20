@@ -201,16 +201,18 @@ class MainActivity : AppCompatActivity() {
             errMsg2 = CalendarManager.WriteEvent(
                 contentResolver, calID, eventIds,
                 "Saxophone practice", "Enjoy!", "Home",
-                "2022.02.28 13:00", 60
+                "2022.04.28 13:00", 60
             )
             if (errMsg2.length>0) { errMsg += "\n" + errMsg2 }
 
             errMsg2 = CalendarManager.WriteEvent(
                 contentResolver, calID, eventIds,
                 "Choir", "Sing well!", "Bowdon Rugby",
-                "2022.02.28 17:00", 120
+                "2022.04.28 17:00", 120
             )
             if (errMsg2.length>0) { errMsg += "\n" + errMsg2 }
+
+            CalendarManager.forceSync(this)
 
             return errMsg
 
